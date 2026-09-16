@@ -38,10 +38,10 @@ pipeline {
             steps {
                 sh '''#!/bin/bash
                     source venv/bin/activate
-                    pip install pytest httpx
-                    pytest test_e2e.py -v --junitxml=pytest-report.xml || true
+                    pip install httpx
+                    # Run the e2e script directly as it is designed to be executed standalone
+                    python test_e2e.py
                 '''
-                junit 'pytest-report.xml'
             }
         }
 
