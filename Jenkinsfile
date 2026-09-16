@@ -39,7 +39,6 @@ pipeline {
                 sh '''#!/bin/bash
                     source venv/bin/activate
                     pip install httpx
-                    # Run the e2e script directly as it is designed to be executed standalone
                     python test_e2e.py
                 '''
             }
