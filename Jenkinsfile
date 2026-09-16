@@ -91,13 +91,13 @@ pipeline {
         }
     }
 
-    post {
-        always {
-            echo 'Cleaning up workspace...'
-            cleanWs()
-        }
-        failure {
-            echo '🚨 Pipeline failed! Check Trivy, Bandit, or EKS rollout logs.'
-        }
-    }
-}
+           post {
+           always {
+               echo 'Cleaning up workspace...'
+               // deleteDir() is more reliable than cleanWs() in Declarative Pipeline
+               deleteDir() 
+           }
+           failure {
+               echo '🚨 Pipeline failed! Scroll up in the Console Output to find the actual error (Docker, Trivy, Bandit, or EKS).'
+           }
+       }
