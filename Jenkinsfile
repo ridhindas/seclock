@@ -4,7 +4,7 @@ pipeline {
     environment {
         AWS_REGION = 'ap-south-1'
         AWS_ACCOUNT_ID = sh(script: 'aws sts get-caller-identity --query Account --output text', returnStdout: true).trim()
-        ECR_REPO_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com/seclock"
+        ECR_REPO_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/seclock"
         IMAGE_TAG = "${env.BUILD_NUMBER}-${env.GIT_COMMIT.take(7)}"
         EKS_CLUSTER_NAME = 'seclock-cluster'
         K8S_NAMESPACE = 'seclock-prod'
@@ -91,13 +91,13 @@ pipeline {
         }
     }
 
-           post {
-           always {
-               echo 'Cleaning up workspace...'
-               // deleteDir() is more reliable than cleanWs() in Declarative Pipeline
-               deleteDir() 
-           }
-           failure {
-               echo '🚨 Pipeline failed! Scroll up in the Console Output to find the actual error (Docker, Trivy, Bandit, or EKS).'
-           }
-       }
+    post {
+        always {
+            echo 'Cleaning up workspace...'
+            deleteDir()
+        }
+        failure {
+            echo '🚨 Pipeline failed! Scroll up in the Console Output to find the actual error.'
+        }
+    }
+}
