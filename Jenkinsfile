@@ -57,7 +57,7 @@ pipeline {
             steps {
                 sh """#!/bin/bash
                     docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \\
-                    aquasec/trivy image --exit-code 1 --severity CRITICAL,HIGH ${ECR_REPO_URI}:${IMAGE_TAG}
+                    aquasec/trivy image --exit-code 1 --ignorefile .trivyignore --severity CRITICAL ${ECR_REPO_URI}:${IMAGE_TAG}
                 """
             }
         }

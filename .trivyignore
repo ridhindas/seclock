@@ -1,0 +1,5 @@
+# Ignore OS-level vulnerabilities that do not affect our Python application runtime
+# perl-base is not used by our FastAPI app
+CVE-2026-13221
+CVE-2026-42496
+CVE-2026-8376
