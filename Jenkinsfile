@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         AWS_REGION = 'ap-south-1'
-        AWS_ACCOUNT_ID = sh(script: 'aws sts get-caller-identity --query Account --output text', returnStdout: true).trim()
+        AWS_ACCOUNT_ID = sh(script: 'aws sts get-caller-identity --region ap-south-1 --query Account --output text', returnStdout: true).trim()
         ECR_REPO_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/seclock"
         IMAGE_TAG = "${env.BUILD_NUMBER}-${env.GIT_COMMIT.take(7)}"
         EKS_CLUSTER_NAME = 'seclock-cluster'
@@ -20,7 +20,7 @@ pipeline {
 
         stage('2. SCA & SAST') {
             steps {
-                sh '''
+                sh '''#!/bin/bash
                     python3 -m venv venv
                     source venv/bin/activate
                     pip install --upgrade pip
@@ -36,7 +36,7 @@ pipeline {
 
         stage('3. Unit & E2E Testing') {
             steps {
-                sh '''
+                sh '''#!/bin/bash
                     source venv/bin/activate
                     pip install pytest httpx
                     pytest test_e2e.py -v --junitxml=pytest-report.xml || true
@@ -55,8 +55,8 @@ pipeline {
 
         stage('5. Container Security Scan (Trivy)') {
             steps {
-                sh """
-                    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+                sh """#!/bin/bash
+                    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \\
                     aquasec/trivy image --exit-code 1 --severity CRITICAL,HIGH ${ECR_REPO_URI}:${IMAGE_TAG}
                 """
             }
@@ -65,7 +65,7 @@ pipeline {
         stage('6. AWS ECR Login & Push') {
             steps {
                 script {
-                    sh '''
+                    sh '''#!/bin/bash
                         aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
                     '''
                     docker.image("${ECR_REPO_URI}:${IMAGE_TAG}").push()
@@ -77,7 +77,7 @@ pipeline {
         stage('7. Deploy to Amazon EKS') {
             steps {
                 script {
-                    sh """
+                    sh """#!/bin/bash
                         aws eks update-kubeconfig --region ${AWS_REGION} --name ${EKS_CLUSTER_NAME}
                         sed -i 's|<AWS_ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com/seclock:latest|${ECR_REPO_URI}:${IMAGE_TAG}|g' k8s/deployment.yaml
                         kubectl create namespace ${K8S_NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
