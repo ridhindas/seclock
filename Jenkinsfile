@@ -54,9 +54,13 @@ pipeline {
 
         stage('5. Container Security Scan (Trivy)') {
             steps {
+                // Mount the workspace (-v ${WORKSPACE}:/workspace) so Trivy can read .trivyignore
                 sh """#!/bin/bash
-                    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \\
-                    aquasec/trivy image --exit-code 1 --ignorefile .trivyignore --severity CRITICAL ${ECR_REPO_URI}:${IMAGE_TAG}
+                    docker run --rm \\
+                        -v /var/run/docker.sock:/var/run/docker.sock \\
+                        -v \${WORKSPACE}:/workspace \\
+                        -w /workspace \\
+                        aquasec/trivy image --exit-code 1 --ignorefile .trivyignore --severity CRITICAL \${ECR_REPO_URI}:\${IMAGE_TAG}
                 """
             }
         }
